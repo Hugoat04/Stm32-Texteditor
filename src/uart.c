@@ -28,20 +28,17 @@ void uart2_init(void){
 	GPIOA_AFRL |= (0x07 << 8) | (0x07 << 12);
 	
 	// set up the DMA
-	DMA_S5CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 8) | (0x01 << 4) | (0x01 << 3);
+	DMA_S5CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 8);
 	DMA_S5NDTR |= 100;
-	DMA_S5PAR |= (unsigned int) &UART2_DATA;
-	DMA_S5M0AR |= (unsigned int) uart2_rx_buffer;
+	DMA_S5PAR = (unsigned int) &UART2_DATA;
+	DMA_S5M0AR = (unsigned int) uart2_rx_buffer;
 	DMA_S5CR |= 1;
 
 	// set UART2
 	UART2_BRR |= 0x0683;
 
 	UART2_CR1 |= 0b0010000000001100;
-	UART2_CR3 |= (0x01 << 6) || (0x01 << 7);
-
-	
-	
+	UART2_CR3 |= (0x01 << 6) | (0x01 << 7);
 
 }
 
@@ -77,9 +74,7 @@ void uart2_recieve(char * str){
 		}	
 			
 		old_pos = current_pos;
-		pos++;
 	}
-
-	str[pos] = '\0';
+	str[pos]='\0';
 }
 
