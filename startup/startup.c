@@ -26,16 +26,19 @@ void reset_handler(void) {
 
 }
 
+// Non-Maskable Interrupt empty for now
 void NMI(void) {
 
 }
 
+// Hard Fault Handler empty for now
 void hard_fault(void) {
 
 }
 
 typedef void (*isr_t)(void);
 
+// Vector Table
 __attribute((used, section(".vectors")))
 static const isr_t vector_table[10]={
 
