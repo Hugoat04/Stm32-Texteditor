@@ -6,13 +6,10 @@ int main(){
 	
 	uart2_init();
 
-	char arr[101];
-
 	while(1){
-		
-		uart2_recieve(arr);	
-		if(*arr != '\0'){
-			uart2_send(arr);
+		if (flag == 1){
+			uart2_send(uart2_buffer);
+			flag = 0;
 		}
 
 	}

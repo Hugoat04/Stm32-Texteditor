@@ -1,10 +1,13 @@
+#include "../src/headers/interrupt.h"
+
 extern int main(void);
 extern void usart2_rx_isr(void);
 extern unsigned int _estack, _etext, _sdata, _edata, _sbss, _ebss;
 
 // initializes C runtime environment and calls main
 void reset_handler(void) {
-	
+
+	_isr_disable();	
 	unsigned int *init_values_ptr = &_etext;
         unsigned int *data_ptr = &_sdata;
 
@@ -19,7 +22,8 @@ void reset_handler(void) {
 	for (unsigned int *i = &_sbss; i <= &_ebss;){
 		*i++ = 0;
 	}
-	
+
+	_isr_enable();
 	// calls main
 	main();
 
@@ -37,6 +41,7 @@ void hard_fault(void) {
 
 }
 
+// UART interrupr handler will simply call my rx interrtpt function 
 void usart2_handler(void){
 	usart2_rx_isr();
 }
