@@ -24,3 +24,10 @@ The microcontroller also requires that we define the Hard Fault Handler (which w
 
 The STM32F446RE Reference Manual and the following video served as my main resources for this part:
 https://youtu.be/MhOba73z-dQ?si=8CAdLMkpidwIjhpF
+
+### UART Interface
+The [UART](src/uart.c) interface in this project will be used to communicate between the microcontroller and the serial monitor on my PC. The baud rate has been chosen to be 9600 because, as stated in the Referance Manual, at this speed and oversampling by 16 the error rate is 0%. UART2 outputs through port A and is directly conected to the ST-Link portion of the Nucleo board making it ideal for the Microcontoller to PC bridge.
+
+The reciver works via the RX interrupt. During the RX interrupt ISR the content the RX register are copied to a buffer that is shared with the main program. Since this interface will be used as a sort of shell the CR (Carriage Return) and LF (Line Feed) characters will set a software flag that alerts the main program, further char checks and flags will be added as needed. The use of the RX interrupt rather than the DMA or direct polling was chosen becaus human input is too slow, therefore any other methode would in this case just do nothing for most of the time.
+
+The transmitter works by sending an entire sting of text at a time. Currently no TX interrupt is used, however, as the project comes along the use of this interrupt may become necessary.
