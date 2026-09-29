@@ -37,9 +37,11 @@ void uart2_init(void){
 	// set UART2
 	UART2_BRR |= 0x0683;
 
-	UART2_CR1 |= 0b0010000000001100;
+	//UART2_CR1 |= 0b0010000000101100;
+	UART2_CR1 |= (0x01 << 2) | (0x01 << 3) | (0x01 << 5) | (0x01 << 13);
 	UART2_CR3 |= (0x01 << 6) | (0x01 << 7);
-
+	
+	GPIOA_MODE |= (0x01 << 10);
 }
 
 // Sends data via UART
@@ -76,5 +78,10 @@ void uart2_recieve(char * str){
 		old_pos = current_pos;
 	}
 	str[pos]='\0';
+}
+
+void usart2_rx_isr(void){
+	
+	GPIOA_OUT ^= (0x01 << 5);
 }
 
