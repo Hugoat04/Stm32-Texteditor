@@ -7,9 +7,12 @@ int main(){
 	uart2_init();
 
 	while(1){
-		if (flag == 1){
-			uart2_send(uart2_buffer);
-			flag = 0;
+		if (ASCII_CTRL.LF == 1 || ASCII_CTRL.CR == 1){
+			ASCII_CTRL.LF = 0;
+			ASCII_CTRL.CR = 0;
+			GPIOA_OUT ^= (1<<5);
+			uart2_send(rx_buffer.buffer);
+			rx_buffer.position = 0;
 		}
 
 	}

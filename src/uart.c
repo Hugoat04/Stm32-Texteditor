@@ -16,9 +16,10 @@
 #define UART2_GTPR      (*(volatile unsigned int *) (UART2_BASE + 0x18))
 
 
-volatile char uart2_buffer[BUFFER_SIZE] = {};
-volatile short pos = 0;
-volatile int flag = 0;
+uart_buffer rx_buffer = {0};
+
+ascii_ctrl ASCII_CTRL = {0};
+
 
 // initializing UART2 and the DMA
 void uart2_init(void){
@@ -49,18 +50,124 @@ void uart2_send(volatile char *str){
 
 }
 
+
 // UART RX interrupt will handle incoming dat// UART RX interrupt will handle incoming data
 void usart2_rx_isr(void){
 	char c = UART2_DATA;	
-	if (c == '\n' || c == '\r'){
-		flag = 1;
-		uart2_buffer[pos++] = c;
-		uart2_buffer[pos] = 0;
-		pos = 0;
-		GPIOA_OUT ^= (0x01 << 5);
-	} else {
-		uart2_buffer[pos++] = c;
-		uart2_buffer[pos] == 1;
-	}
-}
 
+	switch(c){
+	   	case 0x0:	ASCII_CTRL.NUL = 1;
+                                break;
+
+		case 0x01:	ASCII_CTRL.SOH = 1;
+				break;
+
+		case 0x02:      ASCII_CTRL.STX = 1;
+                                break;
+				
+		case 0x03:      ASCII_CTRL.ETX = 1;
+                                break;
+
+		case 0x04:      ASCII_CTRL.EOT = 1;
+                                break;
+
+		case 0x05:      ASCII_CTRL.ENQ = 1;
+                                break;
+
+		case 0x06:      ASCII_CTRL.ACK = 1;
+                                break;
+
+		case 0x07:      ASCII_CTRL.BEL = 1;
+                                break;
+
+		case 0x08:      ASCII_CTRL.BS = 1;
+				if ( rx_buffer.position > 0) 
+					rx_buffer.buffer[--(rx_buffer.position)] = 0;
+                                break;
+
+		case 0x09:      ASCII_CTRL.HT = 1;
+                                break;
+
+		case 0x0a:      ASCII_CTRL.LF = 1;
+		                rx_buffer.buffer[rx_buffer.position++] = c;
+        		        rx_buffer.buffer[rx_buffer.position] = 0;
+                                break;
+
+		case 0x0b:      ASCII_CTRL.VT = 1;
+                                break;
+
+		case 0x0c:      ASCII_CTRL.FF = 1;
+                                break;
+
+		case 0x0d:    	ASCII_CTRL.CR = 1;
+				rx_buffer.buffer[rx_buffer.position++] = c;
+                                rx_buffer.buffer[rx_buffer.position] = 0;
+                                break;
+
+		case 0x0e:      ASCII_CTRL.SO = 1;
+                                break;
+
+		case 0x0f:      ASCII_CTRL.SI = 1;
+                                break;
+
+		case 0x10:      ASCII_CTRL.DLE = 1;
+                                break;
+
+		case 0x11:      ASCII_CTRL.DC1 = 1;
+                                break;
+
+		case 0x12:      ASCII_CTRL.DC2 = 1;
+				break;
+
+                case 0x13:      ASCII_CTRL.DC3 = 1;
+                                break;
+
+                case 0x14:      ASCII_CTRL.DC4 = 1;
+                                break;
+
+                case 0x15:      ASCII_CTRL.NAK = 1;
+                                break;
+
+                case 0x16:      ASCII_CTRL.SYN = 1;
+                                break;
+
+                case 0x17:      ASCII_CTRL.ETB = 1;
+                                break;
+
+                case 0x18:      ASCII_CTRL.CAN = 1;
+                                break;
+
+                case 0x19:      ASCII_CTRL.EM = 1;
+                                break;
+
+                case 0x1a:      ASCII_CTRL.SUB = 1;
+                                break;
+
+                case 0x1b:      ASCII_CTRL.ESC = 1;
+                                break;
+
+                case 0x1c:      ASCII_CTRL.FS = 1;
+                                break;
+
+		case 0x1d:      ASCII_CTRL.GS = 1;
+                                break;
+
+                case 0x1e:      ASCII_CTRL.RS = 1;
+                                break;
+
+                case 0x1f:      ASCII_CTRL.US = 1;
+                                break;
+
+		case 0x7F:      if (rx_buffer.position > 0)
+					rx_buffer.buffer[--(rx_buffer.position)] = 0;
+                                break;
+
+		default:	rx_buffer.buffer[rx_buffer.position++] = c;
+        		        rx_buffer.buffer[rx_buffer.position] = 0;
+
+	}
+
+	if (rx_buffer.position == BUFFER_SIZE)
+		rx_buffer.FULL = 1;
+
+}
