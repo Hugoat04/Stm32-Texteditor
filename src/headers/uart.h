@@ -7,11 +7,11 @@ typedef struct {
 	char buffer[BUFFER_SIZE];
 	short position;
 	unsigned short FULL : 1;
-	unsigned short EMPTY : 1;
 
 } uart_buffer;
 
 extern uart_buffer rx_buffer;
+extern uart_buffer tx_buffer;
 
 typedef struct {
 	
@@ -38,22 +38,21 @@ typedef struct {
 	unsigned int DC4 : 1;
 	unsigned int NAK : 1;
 	unsigned int SYN : 1;
-        unsigned int ETB : 1;
-        unsigned int CAN : 1;
-        unsigned int EM : 1;
-        unsigned int SUB : 1;
-        unsigned int ESC : 1;
-        unsigned int FS : 1;
-        unsigned int GS : 1;
-        unsigned int RS : 1;
-        unsigned int US : 1;
+    unsigned int ETB : 1;
+    unsigned int CAN : 1;
+    unsigned int EM : 1;
+    unsigned int SUB : 1;
+    unsigned int ESC : 1;
+    unsigned int FS : 1;
+    unsigned int GS : 1;
+    unsigned int RS : 1;
+    unsigned int US : 1;
 
 } ascii_ctrl;
 
 extern ascii_ctrl ASCII_CTRL;
 
 void uart2_init(void);
-void uart2_send(volatile char *);
-// void uart2_recieve(char *);
+void uart2_send(void);
 
 #endif

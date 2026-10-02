@@ -1,7 +1,8 @@
 #include "../src/headers/interrupt.h"
 
+typedef void (*isr_t)(void);
 extern int main(void);
-extern void usart2_rx_isr(void);
+extern void usart2_rx_isr(void), dma1_stream6_handler(void);
 extern unsigned int _estack, _etext, _sdata, _edata, _sbss, _ebss;
 
 // initializes C runtime environment and calls main
@@ -46,8 +47,6 @@ void usart2_handler(void){
 	usart2_rx_isr();
 }
 
-typedef void (*isr_t)(void);
-
 // Vector Table
 __attribute((used, section(".vectors")))
 static const isr_t vector_table[120]={
@@ -85,7 +84,7 @@ static const isr_t vector_table[120]={
         0,      // DMA1_Stream3      
         0,      // DMA1_Stream4    
         0,      // DMA1_Stream5      
-        0,      // DMA1_Stream6      
+        dma1_stream6_handler,      // DMA1_Stream6      
         0,      // ADC
         0,      // CAN1_TX
         0,      // CAN1_RX0

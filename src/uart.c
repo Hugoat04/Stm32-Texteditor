@@ -17,6 +17,7 @@
 
 
 uart_buffer rx_buffer = {0};
+uart_buffer tx_buffer = {0};
 
 ascii_ctrl ASCII_CTRL = {0};
 
@@ -30,6 +31,13 @@ void uart2_init(void){
 	GPIOA_OSPEEDR |= (0b11 << 4) | (0b11 << 6);
 	GPIOA_AFRL |= (0x07 << 8) | (0x07 << 12);
 	
+	// set DMA for TX
+	DMA_S6CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 8)| (0x01 << 4) | (0x01 << 3);
+	DMA_S6NDTR |= BUFFER_SIZE;
+	DMA_S6PAR = (unsigned int) &UART2_DATA;
+	DMA_S6M0AR = (unsigned int) uart2_tx_buffer;
+	DMA_S6CR |= 1;
+
 	// set UART2
 	UART2_BRR |= 0x0683;
 	UART2_CR1 |= (0x01 << 2) | (0x01 << 3) | (0x01 << 5) | (0x01 << 13);
@@ -39,17 +47,12 @@ void uart2_init(void){
 }
 
 // Sends data via UART
-void uart2_send(volatile char *str){
-	
-	while (!(UART2_STATUS & (1 << 7)));	
-	for (;*str != '\0';){
-		UART2_DATA = *str;
-		while (!(UART2_STATUS & (1 << 7)));
-		str++;	
-	}
+void uart2_send(){
+
+	GPIOA_OUT ^= (1<<5);
+	UART2_CR3 |= (1 << 7);
 
 }
-
 
 // UART RX interrupt will handle incoming dat// UART RX interrupt will handle incoming data
 void usart2_rx_isr(void){
@@ -57,112 +60,114 @@ void usart2_rx_isr(void){
 
 	switch(c){
 	   	case 0x0:	ASCII_CTRL.NUL = 1;
-                                break;
+                    break;
 
 		case 0x01:	ASCII_CTRL.SOH = 1;
-				break;
+					break;
 
 		case 0x02:      ASCII_CTRL.STX = 1;
-                                break;
+                        break;
 				
 		case 0x03:      ASCII_CTRL.ETX = 1;
-                                break;
+                        break;
 
 		case 0x04:      ASCII_CTRL.EOT = 1;
-                                break;
+                        break;
 
 		case 0x05:      ASCII_CTRL.ENQ = 1;
-                                break;
+                    	break;
 
 		case 0x06:      ASCII_CTRL.ACK = 1;
-                                break;
+                        break;
 
 		case 0x07:      ASCII_CTRL.BEL = 1;
-                                break;
+                        break;
 
 		case 0x08:      ASCII_CTRL.BS = 1;
-				if ( rx_buffer.position > 0) 
-					rx_buffer.buffer[--(rx_buffer.position)] = 0;
-                                break;
+						if ( rx_buffer.position > 0) 
+							rx_buffer.buffer[--(rx_buffer.position)] = 0;
+                        break;
 
 		case 0x09:      ASCII_CTRL.HT = 1;
-                                break;
+						rx_buffer.buffer[rx_buffer.position++] = c;
+						rx_buffer.buffer[rx_buffer.position] = 0;
+                        break;
 
 		case 0x0a:      ASCII_CTRL.LF = 1;
 		                rx_buffer.buffer[rx_buffer.position++] = c;
         		        rx_buffer.buffer[rx_buffer.position] = 0;
-                                break;
+                        break;
 
 		case 0x0b:      ASCII_CTRL.VT = 1;
-                                break;
+                        break;
 
 		case 0x0c:      ASCII_CTRL.FF = 1;
-                                break;
+                        break;
 
 		case 0x0d:    	ASCII_CTRL.CR = 1;
-				rx_buffer.buffer[rx_buffer.position++] = c;
-                                rx_buffer.buffer[rx_buffer.position] = 0;
-                                break;
+						rx_buffer.buffer[rx_buffer.position++] = c;
+                        rx_buffer.buffer[rx_buffer.position] = 0;
+                        break;
 
-		case 0x0e:      ASCII_CTRL.SO = 1;
-                                break;
+		case 0x0e:      ASCII_CTRL.SO = 1;   
+		                break;
 
 		case 0x0f:      ASCII_CTRL.SI = 1;
-                                break;
+                        break;
 
 		case 0x10:      ASCII_CTRL.DLE = 1;
-                                break;
+                        break;
 
 		case 0x11:      ASCII_CTRL.DC1 = 1;
-                                break;
+                        break;
 
 		case 0x12:      ASCII_CTRL.DC2 = 1;
-				break;
+						break;
 
-                case 0x13:      ASCII_CTRL.DC3 = 1;
-                                break;
+        case 0x13:      ASCII_CTRL.DC3 = 1;
+                        break;
 
-                case 0x14:      ASCII_CTRL.DC4 = 1;
-                                break;
+        case 0x14:      ASCII_CTRL.DC4 = 1;
+                        break;
 
-                case 0x15:      ASCII_CTRL.NAK = 1;
-                                break;
+        case 0x15:      ASCII_CTRL.NAK = 1;
+                        break;
 
-                case 0x16:      ASCII_CTRL.SYN = 1;
-                                break;
+        case 0x16:      ASCII_CTRL.SYN = 1;
+                        break;
 
-                case 0x17:      ASCII_CTRL.ETB = 1;
-                                break;
+        case 0x17:      ASCII_CTRL.ETB = 1;
+                        break;
 
-                case 0x18:      ASCII_CTRL.CAN = 1;
-                                break;
+        case 0x18:      ASCII_CTRL.CAN = 1;
+                        break;
 
-                case 0x19:      ASCII_CTRL.EM = 1;
-                                break;
+        case 0x19:      ASCII_CTRL.EM = 1;
+                        break;
 
-                case 0x1a:      ASCII_CTRL.SUB = 1;
-                                break;
+        case 0x1a:      ASCII_CTRL.SUB = 1;
+                        break;
 
-                case 0x1b:      ASCII_CTRL.ESC = 1;
-                                break;
+        case 0x1b:      ASCII_CTRL.ESC = 1;
+                        break;
 
-                case 0x1c:      ASCII_CTRL.FS = 1;
-                                break;
+        case 0x1c:      ASCII_CTRL.FS = 1;
+                        break;
 
 		case 0x1d:      ASCII_CTRL.GS = 1;
-                                break;
+                        break;
 
-                case 0x1e:      ASCII_CTRL.RS = 1;
-                                break;
+        case 0x1e:      ASCII_CTRL.RS = 1;
+                        break;
 
-                case 0x1f:      ASCII_CTRL.US = 1;
-                                break;
+        case 0x1f:      ASCII_CTRL.US = 1;
+                        break;
 
 		case 0x7F:      if (rx_buffer.position > 0)
-					rx_buffer.buffer[--(rx_buffer.position)] = 0;
-                                break;
+							rx_buffer.buffer[--(rx_buffer.position)] = 0;
+                        break;
 
-		default:	rx_buffer.buffer[rx_buffer.position++] = c;
+		default:		rx_buffer.buffer[rx_buffer.position++] = c;
         		        rx_buffer.buffer[rx_buffer.position] = 0;
 
 	}
