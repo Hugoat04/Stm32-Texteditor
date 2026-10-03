@@ -41,7 +41,7 @@ void uart2_init(void){
 	
 
 	// set UART2
-	UART2_BRR |= 0x0683;
+	UART2_BRR |= 0x08B; 
 	UART2_CR1 |= (0x01 << 2) | (0x01 << 3) | (0x01 << 5) | (0x01 << 13);
 	NVIC_ISER1 |= (0x01 << 6);
 
