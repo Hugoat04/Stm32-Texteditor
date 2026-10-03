@@ -18,6 +18,7 @@
 
 uart_buffer rx_buffer = {0};
 uart_buffer tx_buffer = {0};
+uart_buffer  empty_buffer = {0};
 
 ascii_ctrl ASCII_CTRL = {0};
 
@@ -26,17 +27,18 @@ ascii_ctrl ASCII_CTRL = {0};
 void uart2_init(void){
 	// set up the GPIO pins for UART2
 	RCC_APB1ENR |= (1 << 17);
-	RCC_AHB1ENR |= 0x01;
+	RCC_AHB1ENR |= 0x01 | (0x01 << 21);
 	GPIOA_MODE |= (0x1 << 5) | (0x1 << 7);
 	GPIOA_OSPEEDR |= (0b11 << 4) | (0b11 << 6);
 	GPIOA_AFRL |= (0x07 << 8) | (0x07 << 12);
 	
 	// set DMA for TX
-	DMA_S6CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 8)| (0x01 << 4) | (0x01 << 3);
+	DMA_S6CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 6) |(0x01 << 4); // | (0x01 << 3);
 	DMA_S6NDTR |= BUFFER_SIZE;
 	DMA_S6PAR = (unsigned int) &UART2_DATA;
-	DMA_S6M0AR = (unsigned int) uart2_tx_buffer;
-	DMA_S6CR |= 1;
+	DMA_S6M0AR = (unsigned int) tx_buffer.buffer;
+	NVIC_ISER0 |= (0x01 << 17);
+	
 
 	// set UART2
 	UART2_BRR |= 0x0683;
@@ -49,8 +51,22 @@ void uart2_init(void){
 // Sends data via UART
 void uart2_send(){
 
-	GPIOA_OUT ^= (1<<5);
-	UART2_CR3 |= (1 << 7);
+	UART2_STATUS &= ~(0x01 << 6);
+	DMA_S6NDTR |= tx_buffer.position;
+	UART2_CR3 |= (0x01 << 7);
+	DMA_S6CR |= 0x01;
+
+}
+
+// DMA interrupt handler for when the DMA transfer is complete
+void dma1_stream6_full(void){
+	GPIOA_OUT ^= (1 << 5);
+	while(!(UART2_STATUS & (0x01 << 6)));
+
+	UART2_CR3 &= ~(0x01 << 7);
+	DMA_S6CR &= ~(0x01);
+	DMA_HIFCR |= (0x01 << 21);
+	
 
 }
 
@@ -59,17 +75,17 @@ void usart2_rx_isr(void){
 	char c = UART2_DATA;	
 
 	switch(c){
-	   	case 0x0:	ASCII_CTRL.NUL = 1;
-                    break;
+	   	case 0x0:		ASCII_CTRL.NUL = 1;
+                    	break;
 
-		case 0x01:	ASCII_CTRL.SOH = 1;
-					break;
+		case 0x01:		ASCII_CTRL.SOH = 1;
+						break;
 
-		case 0x02:      ASCII_CTRL.STX = 1;
-                        break;
+		case 0x02:	  	ASCII_CTRL.STX = 1;
+            	        break;
 				
-		case 0x03:      ASCII_CTRL.ETX = 1;
-                        break;
+		case 0x03:  	ASCII_CTRL.ETX = 1;
+            	    	break;
 
 		case 0x04:      ASCII_CTRL.EOT = 1;
                         break;

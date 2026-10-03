@@ -11,7 +11,7 @@ int main(){
 			ASCII_CTRL.LF = 0;
 			ASCII_CTRL.CR = 0;
 			tx_buffer = rx_buffer;
-			uart2_send(tx_buffer.buffer);
+			uart2_send();
 			rx_buffer.position = 0;
 		}
 

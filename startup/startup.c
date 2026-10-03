@@ -2,7 +2,7 @@
 
 typedef void (*isr_t)(void);
 extern int main(void);
-extern void usart2_rx_isr(void), dma1_stream6_handler(void);
+extern void usart2_rx_isr(void), dma1_stream6_full(void);
 extern unsigned int _estack, _etext, _sdata, _edata, _sbss, _ebss;
 
 // initializes C runtime environment and calls main
@@ -45,6 +45,10 @@ void hard_fault(void) {
 // UART interrupr handler will simply call my rx interrtpt function 
 void usart2_handler(void){
 	usart2_rx_isr();
+}
+
+void dma1_stream6_handler(void){
+        dma1_stream6_full();
 }
 
 // Vector Table

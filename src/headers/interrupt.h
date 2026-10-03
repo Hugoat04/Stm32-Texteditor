@@ -1,6 +1,7 @@
 #ifndef INTERRUPT
 #define INTERRUPT
 
+#define NVIC_ISER0 	(*(volatile unsigned int *) (0xe000e100UL))
 #define NVIC_ISER1 	(*(volatile unsigned int *) (0xe000e104UL))
 
 void _isr_enable(void);

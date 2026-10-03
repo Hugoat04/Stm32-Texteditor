@@ -5,10 +5,10 @@
 
 #define DMA1_BASE	(0x40026000UL)
 
-#define DMA_LISR	(*(volatile unsigned int *) (DMA1_BASE + 0x00)
-#define DMA_HISR	(*(volatile unsigned int *) (DMA1_BASE + 0x04)
-#define DMA_LIFCR	(*(volatile unsigned int *) (DMA1_BASE + 0x08)
-#define DMA_HIFCR	(*(volatile unsigned int *) (DMA1_BASE + 0x0c)
+#define DMA_LISR	(*(volatile unsigned int *) (DMA1_BASE + 0x00))
+#define DMA_HISR	(*(volatile unsigned int *) (DMA1_BASE + 0x04))
+#define DMA_LIFCR	(*(volatile unsigned int *) (DMA1_BASE + 0x08))
+#define DMA_HIFCR	(*(volatile unsigned int *) (DMA1_BASE + 0x0c))
 
 #define DMA_S5CR	(*(volatile unsigned int *) (DMA1_BASE + 0x010 + (0x18 * 5)))
 #define DMA_S6CR	(*(volatile unsigned int *) (DMA1_BASE + 0x010 + (0x18 * 6)))

@@ -1,7 +1,7 @@
 #ifndef UART
 #define UART
 
-#define BUFFER_SIZE	512
+#define BUFFER_SIZE	(unsigned short)512
 
 typedef struct {
 	char buffer[BUFFER_SIZE];
@@ -12,6 +12,7 @@ typedef struct {
 
 extern uart_buffer rx_buffer;
 extern uart_buffer tx_buffer;
+extern uart_buffer empty_buffer;
 
 typedef struct {
 	
