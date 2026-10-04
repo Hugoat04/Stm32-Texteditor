@@ -3,6 +3,7 @@
 #include "headers/gpio.h"
 #include "headers/dma.h"
 #include "headers/interrupt.h"
+#include "headers/ascii.h"
 
 
 #define UART2_BASE      0x40004400UL
@@ -15,6 +16,7 @@
 #define UART2_CR3       (*(volatile unsigned int *) (UART2_BASE + 0x14))
 #define UART2_GTPR      (*(volatile unsigned int *) (UART2_BASE + 0x18))
 
+uart_regs *UART2 = (uart_regs *) UART2_BASE;
 
 uart_buffer rx_buffer = {0};
 uart_buffer tx_buffer = {0};
@@ -41,7 +43,7 @@ void uart2_init(void){
 	
 
 	// set UART2
-	UART2_BRR |= 0x08B; 
+	UART2_BRR |= 0x08B;
 	UART2_CR1 |= (0x01 << 2) | (0x01 << 3) | (0x01 << 5) | (0x01 << 13);
 	NVIC_ISER1 |= (0x01 << 6);
 
