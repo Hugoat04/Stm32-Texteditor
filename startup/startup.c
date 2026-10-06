@@ -20,7 +20,7 @@ void reset_handler(void) {
         }
 
 	// sets all variables in the bss section to zero
-	for (unsigned int *i = &_sbss; i <= &_ebss;){
+	for (unsigned int *i = &_sbss; i < &_ebss;){
 		*i++ = 0;
 	}
 

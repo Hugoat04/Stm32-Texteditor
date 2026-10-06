@@ -4,7 +4,7 @@
 #include "headers/dma.h"
 #include "headers/interrupt.h"
 
-spi_regs *SPI1 = (spi_regs *) 0x40013000;
+
 
 void spi_init(void){
 

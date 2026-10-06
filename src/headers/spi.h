@@ -1,6 +1,7 @@
 #ifndef SPI_H
 #define SPI_H
 
+#define SPI1_BASE      0x40013000UL
 
 typedef struct {
 
@@ -16,7 +17,7 @@ typedef struct {
     
 }spi_regs;
 
-extern spi_regs *SPI1;
+#define SPI1    ((spi_regs *) (SPI1_BASE))
 
 void spi_init(void);
 

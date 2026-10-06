@@ -1,6 +1,7 @@
 #ifndef UART
 #define UART
 
+// Buffer defenitions
 #define BUFFER_SIZE	(unsigned short)512
 
 typedef struct {
@@ -14,6 +15,9 @@ extern uart_buffer rx_buffer;
 extern uart_buffer tx_buffer;
 extern uart_buffer empty_buffer;
 
+// Registers for UART2
+#define UART2_BASE      0x40004400UL
+
 typedef struct {
 
 	volatile unsigned int SR;
@@ -26,8 +30,9 @@ typedef struct {
 
 } uart_regs;
 
-extern uart_regs *UART2;
+#define UART2    ((uart_regs *) (UART2_BASE))
 
+// UART functions
 void uart2_init(void);
 void uart2_send(void);
 

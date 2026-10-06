@@ -5,22 +5,9 @@
 #include "headers/interrupt.h"
 #include "headers/ascii.h"
 
-
-#define UART2_BASE      0x40004400UL
-
-#define UART2_STATUS    (*(volatile unsigned int *) (UART2_BASE + 0x00))
-#define UART2_DATA      (*(volatile unsigned int *) (UART2_BASE + 0x04))
-#define UART2_BRR       (*(volatile unsigned int *) (UART2_BASE + 0x08))
-#define UART2_CR1       (*(volatile unsigned int *) (UART2_BASE + 0x0C))
-#define UART2_CR2       (*(volatile unsigned int *) (UART2_BASE + 0x10))
-#define UART2_CR3       (*(volatile unsigned int *) (UART2_BASE + 0x14))
-#define UART2_GTPR      (*(volatile unsigned int *) (UART2_BASE + 0x18))
-
-uart_regs *UART2 = (uart_regs *) UART2_BASE;
-
 uart_buffer rx_buffer = {0};
 uart_buffer tx_buffer = {0};
-uart_buffer  empty_buffer = {0};
+uart_buffer empty_buffer = {0};
 
 ascii_ctrl ASCII_CTRL = {0};
 
@@ -28,53 +15,53 @@ ascii_ctrl ASCII_CTRL = {0};
 // initializing UART2 and the DMA
 void uart2_init(void){
 	// set up the GPIO pins for UART2
-	RCC_APB1ENR |= (1 << 17);
-	RCC_AHB1ENR |= 0x01 | (0x01 << 21);
-	GPIOA_MODE |= (0x1 << 5) | (0x1 << 7);
-	GPIOA_OSPEEDR |= (0b11 << 4) | (0b11 << 6);
-	GPIOA_AFRL |= (0x07 << 8) | (0x07 << 12);
+	RCC->APB1ENR |= (1 << 17);
+	RCC->AHB1ENR |= 0x01 | (0x01 << 21);
+	GPIOA->MODER |= (0x1 << 5) | (0x1 << 7);
+	GPIOA->OSPEEDR |= (0b11 << 4) | (0b11 << 6);
+	GPIOA->AFRL |= (0x07 << 8) | (0x07 << 12);
 	
 	// set DMA for TX
-	DMA_S6CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 6) |(0x01 << 4); // | (0x01 << 3);
-	DMA_S6NDTR |= BUFFER_SIZE;
-	DMA_S6PAR = (unsigned int) &UART2_DATA;
-	DMA_S6M0AR = (unsigned int) tx_buffer.buffer;
+	DMA1->S[6].CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 6) |(0x01 << 4); // | (0x01 << 3);
+	DMA1->S[6].NDTR |= BUFFER_SIZE;
+	DMA1->S[6].PAR = (unsigned int) &UART2->DR;
+	DMA1->S[6].M0AR = (unsigned int) tx_buffer.buffer;
 	NVIC_ISER0 |= (0x01 << 17);
 	
 
 	// set UART2
-	UART2_BRR |= 0x08B;
-	UART2_CR1 |= (0x01 << 2) | (0x01 << 3) | (0x01 << 5) | (0x01 << 13);
+	UART2->BRR |= 0x08B;
+	UART2->CR1 |= (0x01 << 2) | (0x01 << 3) | (0x01 << 5) | (0x01 << 13);
 	NVIC_ISER1 |= (0x01 << 6);
 
-	GPIOA_MODE |= (0x01 << 10);
+	GPIOA->MODER |= (0x01 << 10);
 }
 
 // Sends data via UART
 void uart2_send(){
 
-	UART2_STATUS &= ~(0x01 << 6);
-	DMA_S6NDTR |= tx_buffer.position;
-	UART2_CR3 |= (0x01 << 7);
-	DMA_S6CR |= 0x01;
+	UART2->SR &= ~(0x01 << 6);
+	DMA1->S[6].NDTR |= tx_buffer.position;
+	UART2->CR3 |= (0x01 << 7);
+	DMA1->S[6].CR |= 0x01;
 
 }
 
 // DMA interrupt handler for when the DMA transfer is complete
 void dma1_stream6_full(void){
-	GPIOA_OUT ^= (1 << 5);
-	while(!(UART2_STATUS & (0x01 << 6)));
+	GPIOA->ODR ^= (1 << 5);
+	while(!(UART2->SR & (0x01 << 6)));
 
-	UART2_CR3 &= ~(0x01 << 7);
-	DMA_S6CR &= ~(0x01);
-	DMA_HIFCR |= (0x01 << 21);
+	UART2->CR3 &= ~(0x01 << 7);
+	DMA1->S[6].CR &= ~(0x01);
+	DMA1->HIFCR |= (0x01 << 21);
 	
 
 }
 
 // UART RX interrupt will handle incoming dat// UART RX interrupt will handle incoming data
 void usart2_rx_isr(void){
-	char c = UART2_DATA;	
+	char c = UART2->DR;	
 
 	switch(c){
 	   	case 0x0:		ASCII_CTRL.NUL = 1;
