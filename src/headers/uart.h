@@ -1,5 +1,5 @@
-#ifndef UART
-#define UART
+#ifndef UART_H
+#define UART_H
 
 // Buffer defenitions
 #define BUFFER_SIZE	(unsigned short)512

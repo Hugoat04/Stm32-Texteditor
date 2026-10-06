@@ -1,7 +1,8 @@
-#ifndef GPIO
-#define GPIO
+#ifndef GPIO_H
+#define GPIO_H
 
 #define GPIOA_BASE      0x40020000UL
+#define GPIOB_BASE      0x40020400UL
 
 typedef struct {
     volatile unsigned int MODER;
@@ -18,5 +19,6 @@ typedef struct {
 } gpio_regs;
 
 #define GPIOA    ((gpio_regs *) (GPIOA_BASE))
+#define GPIOB    ((gpio_regs *) (GPIOB_BASE))
 
 #endif 

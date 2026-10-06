@@ -22,7 +22,7 @@ void uart2_init(void){
 	GPIOA->AFRL |= (0x07 << 8) | (0x07 << 12);
 	
 	// set DMA for TX
-	DMA1->S[6].CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 6) |(0x01 << 4); // | (0x01 << 3);
+	DMA1->S[6].CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 6) |(0x01 << 4);
 	DMA1->S[6].NDTR |= BUFFER_SIZE;
 	DMA1->S[6].PAR = (unsigned int) &UART2->DR;
 	DMA1->S[6].M0AR = (unsigned int) tx_buffer.buffer;
@@ -34,11 +34,10 @@ void uart2_init(void){
 	UART2->CR1 |= (0x01 << 2) | (0x01 << 3) | (0x01 << 5) | (0x01 << 13);
 	NVIC_ISER1 |= (0x01 << 6);
 
-	GPIOA->MODER |= (0x01 << 10);
 }
 
 // Sends data via UART
-void uart2_send(){
+void uart2_send(void){
 
 	UART2->SR &= ~(0x01 << 6);
 	DMA1->S[6].NDTR |= tx_buffer.position;
@@ -49,7 +48,7 @@ void uart2_send(){
 
 // DMA interrupt handler for when the DMA transfer is complete
 void dma1_stream6_full(void){
-	GPIOA->ODR ^= (1 << 5);
+
 	while(!(UART2->SR & (0x01 << 6)));
 
 	UART2->CR3 &= ~(0x01 << 7);

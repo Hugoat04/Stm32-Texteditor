@@ -19,6 +19,8 @@ typedef struct {
 
 #define SPI1    ((spi_regs *) (SPI1_BASE))
 
-void spi_init(void);
+void spi1_init(void);
+void spi1_send(char *);
+void spi1_reveive(char *);
 
 #endif 
