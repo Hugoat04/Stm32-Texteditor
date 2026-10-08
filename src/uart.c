@@ -5,9 +5,9 @@
 #include "headers/interrupt.h"
 #include "headers/ascii.h"
 
-uart_buffer rx_buffer = {0};
-uart_buffer tx_buffer = {0};
-uart_buffer empty_buffer = {0};
+buffer rx_buffer = {0};
+buffer tx_buffer = {0};
+buffer empty_buffer = {0};
 
 ascii_ctrl ASCII_CTRL = {0};
 
@@ -23,7 +23,7 @@ void uart2_init(void){
 	
 	// set DMA for TX
 	DMA1->S[6].CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 6) |(0x01 << 4);
-	DMA1->S[6].NDTR |= BUFFER_SIZE;
+	DMA1->S[6].NDTR = BUFFER_SIZE;
 	DMA1->S[6].PAR = (unsigned int) &UART2->DR;
 	DMA1->S[6].M0AR = (unsigned int) tx_buffer.buffer;
 	NVIC_ISER0 |= (0x01 << 17);
@@ -40,7 +40,7 @@ void uart2_init(void){
 void uart2_send(void){
 
 	UART2->SR &= ~(0x01 << 6);
-	DMA1->S[6].NDTR |= tx_buffer.position;
+	DMA1->S[6].NDTR = tx_buffer.position;
 	UART2->CR3 |= (0x01 << 7);
 	DMA1->S[6].CR |= 0x01;
 

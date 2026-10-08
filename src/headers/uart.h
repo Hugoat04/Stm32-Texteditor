@@ -1,19 +1,7 @@
 #ifndef UART_H
 #define UART_H
 
-// Buffer defenitions
-#define BUFFER_SIZE	(unsigned short)512
-
-typedef struct {
-	char buffer[BUFFER_SIZE];
-	short position;
-	unsigned short FULL : 1;
-
-} uart_buffer;
-
-extern uart_buffer rx_buffer;
-extern uart_buffer tx_buffer;
-extern uart_buffer empty_buffer;
+#include "buffer.h"
 
 // Registers for UART2
 #define UART2_BASE      0x40004400UL

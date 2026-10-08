@@ -1,9 +1,8 @@
 #ifndef DMA_H
 #define DMA_H
 
-// DMA1
-
 #define DMA1_BASE	(0x40026000UL)
+#define DMA2_BASE	(0x40026400UL)
 
 typedef struct {
     volatile unsigned int CR;
@@ -26,5 +25,6 @@ typedef struct {
 } dma_regs;
 
 #define DMA1    ((dma_regs *) (DMA1_BASE))
+#define DMA2    ((dma_regs *) (DMA2_BASE))
 
 #endif

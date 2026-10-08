@@ -1,6 +1,8 @@
 #ifndef SPI_H
 #define SPI_H
 
+#include "buffer.h"
+
 #define SPI1_BASE      0x40013000UL
 
 typedef struct {
