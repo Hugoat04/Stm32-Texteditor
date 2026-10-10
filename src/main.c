@@ -18,7 +18,6 @@ int main(){
 			ASCII_CTRL.CR = 0;
 			
 			spi1_send(rx_buffer.buffer);
-			spi_rx_buffer.position = 100;
 			tx_buffer = spi_rx_buffer;
 			uart2_send();
 			rx_buffer.position = 0;

@@ -6,7 +6,7 @@
 
 buffer spi_rx_buffer = {0};
 
-
+#include "headers/uart.h"
 void spi1_init(void){
 
     // set up the GPIO pins for SPI1
@@ -17,7 +17,7 @@ void spi1_init(void){
     GPIOA->AFRL |= (0x05 << 20) | (0x05 << 24) | (0x05 << 28);
 
     // DMA
-    DMA2->S[0].CR |= (0x03 << 25) | (0x03 << 16) | (0x01 << 10) | 0x01;
+    DMA2->S[0].CR |= (0x03 << 25) | (0x03 << 16) | (0x01 << 10);
     DMA2->S[0].NDTR |= 100;
 	DMA2->S[0].PAR = (unsigned int) &SPI1->DR;
 	DMA2->S[0].M0AR = (unsigned int) spi_rx_buffer.buffer;
@@ -30,6 +30,11 @@ void spi1_init(void){
 }
 
 void spi1_send(char * c){
+
+    DMA2->S[0].CR &= ~(0x01);
+    while (DMA2->S[0].CR & 1u);
+    DMA2->LIFCR = 0x03d;
+    DMA2->S[0].CR |= 0x01;
     
     GPIOA->BSRR |= (0x01 << (4 + 16));
     
@@ -42,20 +47,7 @@ void spi1_send(char * c){
     while (SPI1->SR & ( 0x01 << 7));
     GPIOA->BSRR |= (0x01 << 4);
 
+    spi_rx_buffer.buffer[100] = 0;
+    spi_rx_buffer.position = 100;
+
 }
-
-/*void spi1_reveive(char * c){
-
-    GPIOA->BSRR |= (0x01 << (4 + 16));
-    
-    for(;*c != '\0';){
-        *c = SPI1->DR;
-        while (!(SPI1->SR & (0x01)));
-        c++;
-    }
-
-    while (SPI1->SR & ( 0x01 << 7));
-
-    GPIOA->BSRR |= (0x01 << 4);
-
-}*/

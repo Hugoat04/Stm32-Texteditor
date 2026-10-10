@@ -3,6 +3,8 @@
 
 #include "buffer.h"
 
+extern buffer spi_rx_buffer;
+
 #define SPI1_BASE      0x40013000UL
 
 typedef struct {

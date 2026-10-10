@@ -10,9 +10,6 @@ typedef struct {
 
 } buffer;
 
-extern buffer rx_buffer;
-extern buffer tx_buffer;
 extern buffer empty_buffer;
-extern buffer spi_rx_buffer;
 
 #endif

@@ -3,6 +3,9 @@
 
 #include "buffer.h"
 
+extern buffer rx_buffer;
+extern buffer tx_buffer;
+
 // Registers for UART2
 #define UART2_BASE      0x40004400UL
 

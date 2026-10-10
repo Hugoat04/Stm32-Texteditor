@@ -9,17 +9,12 @@ MEMORY {
 _estack = ORIGIN(ram) + LENGTH(ram);	/* The stack pointer starts at the end of RAM and grows down */
 
 SECTIONS {
-	
-
-	/* section for vectors like the reset handler and interrupts */
-	.vectors : ALIGN(4) {
-		KEEP(*(.vectors))
-		. = ALIGN(4);	
-	}
 
 	/* The code will live here */
 	.text : ALIGN(4) {	
+		KEEP(*(.vectors))
 		*(.text*)
+		KEEP(*(.rodata))
 		.  = ALIGN(4);
 		_etext = .;
 	} > rom

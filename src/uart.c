@@ -39,6 +39,8 @@ void uart2_init(void){
 // Sends data via UART
 void uart2_send(void){
 
+	while(DMA1->HISR & (0x01 << 21));
+
 	UART2->SR &= ~(0x01 << 6);
 	DMA1->S[6].NDTR = tx_buffer.position;
 	UART2->CR3 |= (0x01 << 7);
@@ -53,8 +55,7 @@ void dma1_stream6_full(void){
 
 	UART2->CR3 &= ~(0x01 << 7);
 	DMA1->S[6].CR &= ~(0x01);
-	DMA1->HIFCR |= (0x01 << 21);
-	
+	DMA1->HIFCR |= (0x03d << 16);
 
 }
 
