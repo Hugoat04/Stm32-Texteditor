@@ -3,8 +3,7 @@
 
 #include "buffer.h"
 
-extern buffer rx_buffer;
-extern buffer tx_buffer;
+extern buffer uart_rx_buffer;
 
 // Registers for UART2
 #define UART2_BASE      0x40004400UL
@@ -25,6 +24,6 @@ typedef struct {
 
 // UART functions
 void uart2_init(void);
-void uart2_send(void);
+void uart2_send(buffer *);
 
 #endif

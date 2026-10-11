@@ -4,6 +4,7 @@
 #include "buffer.h"
 
 extern buffer spi_rx_buffer;
+extern buffer spi_tx_buffer;
 
 #define SPI1_BASE      0x40013000UL
 
@@ -24,7 +25,6 @@ typedef struct {
 #define SPI1    ((spi_regs *) (SPI1_BASE))
 
 void spi1_init(void);
-void spi1_send(char *);
-void spi1_reveive(char *);
+void spi1_send(buffer *);
 
 #endif 

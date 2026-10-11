@@ -5,8 +5,7 @@
 #include "headers/interrupt.h"
 #include "headers/ascii.h"
 
-buffer rx_buffer = {0};
-buffer tx_buffer = {0};
+buffer uart_rx_buffer = {0};
 buffer empty_buffer = {0};
 
 ascii_ctrl ASCII_CTRL = {0};
@@ -25,7 +24,6 @@ void uart2_init(void){
 	DMA1->S[6].CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 6) |(0x01 << 4);
 	DMA1->S[6].NDTR = BUFFER_SIZE;
 	DMA1->S[6].PAR = (unsigned int) &UART2->DR;
-	DMA1->S[6].M0AR = (unsigned int) tx_buffer.buffer;
 	NVIC_ISER0 |= (0x01 << 17);
 	
 
@@ -37,12 +35,13 @@ void uart2_init(void){
 }
 
 // Sends data via UART
-void uart2_send(void){
+void uart2_send(buffer *tx_buffer){
 
 	while(DMA1->HISR & (0x01 << 21));
 
 	UART2->SR &= ~(0x01 << 6);
-	DMA1->S[6].NDTR = tx_buffer.position;
+	DMA1->S[6].NDTR = tx_buffer->position;
+	DMA1->S[6].M0AR = (unsigned int) tx_buffer->buffer;
 	UART2->CR3 |= (0x01 << 7);
 	DMA1->S[6].CR |= 0x01;
 
@@ -57,6 +56,7 @@ void dma1_stream6_full(void){
 	DMA1->S[6].CR &= ~(0x01);
 	DMA1->HIFCR |= (0x03d << 16);
 
+	uart_rx_buffer = empty_buffer;
 }
 
 // UART RX interrupt will handle incoming dat// UART RX interrupt will handle incoming data
@@ -89,18 +89,18 @@ void usart2_rx_isr(void){
                         break;
 
 		case 0x08:      ASCII_CTRL.BS = 1;
-						if ( rx_buffer.position > 0) 
-							rx_buffer.buffer[--(rx_buffer.position)] = 0;
+						if ( uart_rx_buffer.position > 0) 
+							uart_rx_buffer.buffer[--(uart_rx_buffer.position)] = 0;
                         break;
 
 		case 0x09:      ASCII_CTRL.HT = 1;
-						rx_buffer.buffer[rx_buffer.position++] = c;
-						rx_buffer.buffer[rx_buffer.position] = 0;
+						uart_rx_buffer.buffer[uart_rx_buffer.position++] = c;
+						uart_rx_buffer.buffer[uart_rx_buffer.position] = 0;
                         break;
 
 		case 0x0a:      ASCII_CTRL.LF = 1;
-		                rx_buffer.buffer[rx_buffer.position++] = c;
-        		        rx_buffer.buffer[rx_buffer.position] = 0;
+		                uart_rx_buffer.buffer[uart_rx_buffer.position++] = c;
+        		        uart_rx_buffer.buffer[uart_rx_buffer.position] = 0;
                         break;
 
 		case 0x0b:      ASCII_CTRL.VT = 1;
@@ -110,8 +110,8 @@ void usart2_rx_isr(void){
                         break;
 
 		case 0x0d:    	ASCII_CTRL.CR = 1;
-						rx_buffer.buffer[rx_buffer.position++] = c;
-                        rx_buffer.buffer[rx_buffer.position] = 0;
+						uart_rx_buffer.buffer[uart_rx_buffer.position++] = c;
+                        uart_rx_buffer.buffer[uart_rx_buffer.position] = 0;
                         break;
 
 		case 0x0e:      ASCII_CTRL.SO = 1;   
@@ -168,16 +168,16 @@ void usart2_rx_isr(void){
         case 0x1f:      ASCII_CTRL.US = 1;
                         break;
 
-		case 0x7F:      if (rx_buffer.position > 0)
-							rx_buffer.buffer[--(rx_buffer.position)] = 0;
+		case 0x7F:      if (uart_rx_buffer.position > 0)
+							uart_rx_buffer.buffer[--(uart_rx_buffer.position)] = 0;
                         break;
 
-		default:		rx_buffer.buffer[rx_buffer.position++] = c;
-        		        rx_buffer.buffer[rx_buffer.position] = 0;
+		default:		uart_rx_buffer.buffer[uart_rx_buffer.position++] = c;
+        		        uart_rx_buffer.buffer[uart_rx_buffer.position] = 0;
 
 	}
 
-	if (rx_buffer.position == BUFFER_SIZE)
-		rx_buffer.FULL = 1;
+	if (uart_rx_buffer.position == BUFFER_SIZE)
+		uart_rx_buffer.FULL = 1;
 
 }
