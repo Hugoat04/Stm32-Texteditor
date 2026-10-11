@@ -6,7 +6,6 @@
 
 buffer spi_rx_buffer = {0};
 
-#include "headers/uart.h"
 void spi1_init(void){
 
     // set up the GPIO pins for SPI1
@@ -17,15 +16,17 @@ void spi1_init(void){
     GPIOA->AFRL |= (0x05 << 20) | (0x05 << 24) | (0x05 << 28);
 
     // DMA for SPI RX
-    DMA2->S[0].CR |= (0x03 << 25) | (0x03 << 16) | (0x01 << 10);
-    DMA2->S[0].NDTR |= BUFFER_SIZE;
+    DMA2->S[0].CR |= (0x03 << 25) | (0x03 << 16) | (0x01 << 10) | (0x01 << 4);
+    DMA2->S[0].NDTR = BUFFER_SIZE;
 	DMA2->S[0].PAR = (unsigned int) &SPI1->DR;
 	DMA2->S[0].M0AR = (unsigned int) spi_rx_buffer.buffer;
+    NVIC_ISER1 |= (0x01 << 24);
 
     // DMA for SPI TX
-    DMA2->S[3].CR |= (0x03 << 25) | (0x03 << 16) | (0x01 << 10) | (0x01 << 6);
+    DMA2->S[3].CR |= (0x03 << 25) | (0x03 << 16) | (0x01 << 10) | (0x01 << 6) | (0x01 << 4);
     DMA2->S[3].NDTR |= BUFFER_SIZE;
 	DMA2->S[3].PAR = (unsigned int) &SPI1->DR;
+    NVIC_ISER1 |= (0x01 << 27);
 
     // set SPI1 to SPI mode 0
     SPI1->CR1 |= (0x01 << 9) | (0x01 << 8) | (0x01 << 6) | (0x07 << 3) | (0x01 << 2);
@@ -36,26 +37,34 @@ void spi1_init(void){
 
 void spi1_send(buffer *tx_buffer){
 
-    // RX part (just for texting)
-    DMA2->S[0].CR &= ~(0x01);
-    DMA2->LIFCR = 0x03d;
-    DMA2->S[0].NDTR |= tx_buffer->position;
-    DMA2->S[0].CR |= 0x01;
-
-    // TX part
     DMA2->LIFCR = (0x03d << 22);
-    DMA2->S[3].NDTR |= tx_buffer->position;
+    DMA2->S[3].NDTR = tx_buffer->position;
     DMA2->S[3].M0AR = (unsigned int) tx_buffer->buffer;
 
     GPIOA->BSRR |= (0x01 << (4 + 16));
-    
     DMA2->S[3].CR |= 0x01;
-    while(!(DMA2->LISR & (0x01 << 27)));
 
-    GPIOA->BSRR |= (0x01 << 4);
-    DMA2->S[3].CR &= ~(0x01);
+}
 
-    // Wait for the RX part to finish
+// SPI RX DMA ISR
+void dma2_stream0_full_isr(void){
+
     while(!(DMA2->LISR & (0x01 << 5)));
-   
+    DMA2->S[0].CR &= ~(0x01);
+    DMA2->LIFCR = 0x03d;
+    spi_rx_buffer.position = BUFFER_SIZE;
+    DMA2->S[0].NDTR = BUFFER_SIZE;
+    DMA2->S[0].CR |= 0x01;
+    GPIOA->BSRR |= (0x01 << 4);
+}
+
+// SPI TX DMA ISR
+void dma2_stream3_full_isr(void){
+    
+    while(SPI1->SR & (0x01 << 7));
+    
+
+    DMA2->S[3].CR &= ~(0x01);
+    DMA2->LIFCR = (0x03d << 22);
+
 }

@@ -48,15 +48,13 @@ void uart2_send(buffer *tx_buffer){
 }
 
 // DMA interrupt handler for when the DMA transfer is complete
-void dma1_stream6_full(void){
+void dma1_stream6_full_isr(void){
 
 	while(!(UART2->SR & (0x01 << 6)));
 
-	UART2->CR3 &= ~(0x01 << 7);
 	DMA1->S[6].CR &= ~(0x01);
 	DMA1->HIFCR |= (0x03d << 16);
 
-	uart_rx_buffer = empty_buffer;
 }
 
 // UART RX interrupt will handle incoming dat// UART RX interrupt will handle incoming data
