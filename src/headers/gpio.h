@@ -1,12 +1,24 @@
-#ifndef GPIO
-#define GPIO
+#ifndef GPIO_H
+#define GPIO_H
 
 #define GPIOA_BASE      0x40020000UL
-#define GPIOA_MODE      (*(volatile int *) (GPIOA_BASE + 0x00))
-#define GPIOA_OUT       (*(volatile int *) (GPIOA_BASE + 0x14))
-#define GPIOA_AFRL      (*(volatile int *) (GPIOA_BASE + 0x20))
-#define GPIOA_PUPDR     (*(volatile int *) (GPIOA_BASE + 0x0c))
-#define GPIOA_OSPEEDR   (*(volatile int *) (GPIOA_BASE + 0x08))
+#define GPIOB_BASE      0x40020400UL
 
+typedef struct {
+    volatile unsigned int MODER;
+    volatile unsigned int OTYPER;
+    volatile unsigned int OSPEEDR;
+    volatile unsigned int PUPDR;
+    volatile unsigned int IDR;
+    volatile unsigned int ODR;
+    volatile unsigned int BSRR;
+    volatile unsigned int LCKR;
+    volatile unsigned int AFRL;
+    volatile unsigned int AFRH;
+
+} gpio_regs;
+
+#define GPIOA    ((gpio_regs *) (GPIOA_BASE))
+#define GPIOB    ((gpio_regs *) (GPIOB_BASE))
 
 #endif 

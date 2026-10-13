@@ -2,7 +2,7 @@
 
 typedef void (*isr_t)(void);
 extern int main(void);
-extern void usart2_rx_isr(void), dma1_stream6_full(void);
+extern void __attribute__((weak)) usart2_rx_isr(void), dma1_stream6_full_isr(void), dma2_stream0_full_isr(void), dma2_stream3_full_isr(void);
 extern unsigned int _estack, _etext, _sdata, _edata, _sbss, _ebss;
 
 // initializes C runtime environment and calls main
@@ -20,7 +20,7 @@ void reset_handler(void) {
         }
 
 	// sets all variables in the bss section to zero
-	for (unsigned int *i = &_sbss; i <= &_ebss;){
+	for (unsigned int *i = &_sbss; i < &_ebss;){
 		*i++ = 0;
 	}
 
@@ -48,7 +48,15 @@ void usart2_handler(void){
 }
 
 void dma1_stream6_handler(void){
-        dma1_stream6_full();
+        dma1_stream6_full_isr();
+}
+
+void dma2_stream0_handler(void){
+        dma2_stream0_full_isr();
+}
+
+void dma2_stream3_handler(void){
+        dma2_stream3_full_isr();
 }
 
 // Vector Table
@@ -112,7 +120,36 @@ static const isr_t vector_table[120]={
         usart2_handler,      // USART2
         0,      // USART3
         0,      // EXTI15_10
-
-
+        0,      // RTC_Alarm
+        0,      // OTG_FS_WKUP
+        0,      // TIM8_BRK_TIM12
+        0,      // TIM8_UP_TIM13
+        0,      // TIM8_TRG_COM_TIM14
+        0,      // TIM8_CC
+        0,      // DMA1_Stream7
+        0,      // FSMC
+        0,      // SDIO
+        0,      // TIM5
+        0,      // SPI3
+        0,      // UART4
+        0,      // UART5
+        0,      // TIM6_DAC
+        0,      // TIM7
+        dma2_stream0_handler,      // DMA2_Stream0
+        0,      // DMA2_Stream1
+        0,      // DMA2_Stream2
+        dma2_stream3_handler,      // DMA2_Stream3
+        0,      // DMA2_Stream4
+        0,      
+        0,      
+        0,      // CAN2_TX
+        0,      // CAN2_RX0
+        0,      // CAN2_RX1
+        0,      // CAN2_SCE
+        0,      // OTG_FS
+        0,      // DMA2_Stream5
+        0,      // DMA2_Stream6
+        0,      // DMA2_Stream7
+  
 
 };

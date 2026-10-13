@@ -1,5 +1,5 @@
-#ifndef INTERRUPT
-#define INTERRUPT
+#ifndef INTERRUPT_H
+#define INTERRUPT_H
 
 #define NVIC_ISER0 	(*(volatile unsigned int *) (0xe000e100UL))
 #define NVIC_ISER1 	(*(volatile unsigned int *) (0xe000e104UL))

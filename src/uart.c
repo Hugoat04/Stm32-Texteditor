@@ -3,22 +3,10 @@
 #include "headers/gpio.h"
 #include "headers/dma.h"
 #include "headers/interrupt.h"
+#include "headers/ascii.h"
 
-
-#define UART2_BASE      0x40004400UL
-
-#define UART2_STATUS    (*(volatile unsigned int *) (UART2_BASE + 0x00))
-#define UART2_DATA      (*(volatile unsigned int *) (UART2_BASE + 0x04))
-#define UART2_BRR       (*(volatile unsigned int *) (UART2_BASE + 0x08))
-#define UART2_CR1       (*(volatile unsigned int *) (UART2_BASE + 0x0C))
-#define UART2_CR2       (*(volatile unsigned int *) (UART2_BASE + 0x10))
-#define UART2_CR3       (*(volatile unsigned int *) (UART2_BASE + 0x14))
-#define UART2_GTPR      (*(volatile unsigned int *) (UART2_BASE + 0x18))
-
-
-uart_buffer rx_buffer = {0};
-uart_buffer tx_buffer = {0};
-uart_buffer  empty_buffer = {0};
+buffer uart_rx_buffer = {0};
+buffer empty_buffer = {0};
 
 ascii_ctrl ASCII_CTRL = {0};
 
@@ -26,53 +14,52 @@ ascii_ctrl ASCII_CTRL = {0};
 // initializing UART2 and the DMA
 void uart2_init(void){
 	// set up the GPIO pins for UART2
-	RCC_APB1ENR |= (1 << 17);
-	RCC_AHB1ENR |= 0x01 | (0x01 << 21);
-	GPIOA_MODE |= (0x1 << 5) | (0x1 << 7);
-	GPIOA_OSPEEDR |= (0b11 << 4) | (0b11 << 6);
-	GPIOA_AFRL |= (0x07 << 8) | (0x07 << 12);
+	RCC->APB1ENR |= (1 << 17);
+	RCC->AHB1ENR |= 0x01 | (0x01 << 21);
+	GPIOA->MODER |= (0x1 << 5) | (0x1 << 7);
+	GPIOA->OSPEEDR |= (0b11 << 4) | (0b11 << 6);
+	GPIOA->AFRL |= (0x07 << 8) | (0x07 << 12);
 	
 	// set DMA for TX
-	DMA_S6CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 6) |(0x01 << 4); // | (0x01 << 3);
-	DMA_S6NDTR |= BUFFER_SIZE;
-	DMA_S6PAR = (unsigned int) &UART2_DATA;
-	DMA_S6M0AR = (unsigned int) tx_buffer.buffer;
+	DMA1->S[6].CR |= (0x04 << 25) | (0x02 << 16) | (0x01 << 10) | (0x01 << 6) |(0x01 << 4);
+	DMA1->S[6].NDTR = BUFFER_SIZE;
+	DMA1->S[6].PAR = (unsigned int) &UART2->DR;
 	NVIC_ISER0 |= (0x01 << 17);
 	
 
 	// set UART2
-	UART2_BRR |= 0x08B; 
-	UART2_CR1 |= (0x01 << 2) | (0x01 << 3) | (0x01 << 5) | (0x01 << 13);
+	UART2->BRR |= 0x08B;
+	UART2->CR1 |= (0x01 << 2) | (0x01 << 3) | (0x01 << 5) | (0x01 << 13);
 	NVIC_ISER1 |= (0x01 << 6);
 
-	GPIOA_MODE |= (0x01 << 10);
 }
 
 // Sends data via UART
-void uart2_send(){
+void uart2_send(buffer *tx_buffer){
 
-	UART2_STATUS &= ~(0x01 << 6);
-	DMA_S6NDTR |= tx_buffer.position;
-	UART2_CR3 |= (0x01 << 7);
-	DMA_S6CR |= 0x01;
+	while(DMA1->HISR & (0x01 << 21));
+
+	UART2->SR &= ~(0x01 << 6);
+	DMA1->S[6].NDTR = tx_buffer->position;
+	DMA1->S[6].M0AR = (unsigned int) tx_buffer->buffer;
+	UART2->CR3 |= (0x01 << 7);
+	DMA1->S[6].CR |= 0x01;
 
 }
 
 // DMA interrupt handler for when the DMA transfer is complete
-void dma1_stream6_full(void){
-	GPIOA_OUT ^= (1 << 5);
-	while(!(UART2_STATUS & (0x01 << 6)));
+void dma1_stream6_full_isr(void){
 
-	UART2_CR3 &= ~(0x01 << 7);
-	DMA_S6CR &= ~(0x01);
-	DMA_HIFCR |= (0x01 << 21);
-	
+	while(!(UART2->SR & (0x01 << 6)));
+
+	DMA1->S[6].CR &= ~(0x01);
+	DMA1->HIFCR |= (0x03d << 16);
 
 }
 
 // UART RX interrupt will handle incoming dat// UART RX interrupt will handle incoming data
 void usart2_rx_isr(void){
-	char c = UART2_DATA;	
+	char c = UART2->DR;	
 
 	switch(c){
 	   	case 0x0:		ASCII_CTRL.NUL = 1;
@@ -100,18 +87,18 @@ void usart2_rx_isr(void){
                         break;
 
 		case 0x08:      ASCII_CTRL.BS = 1;
-						if ( rx_buffer.position > 0) 
-							rx_buffer.buffer[--(rx_buffer.position)] = 0;
+						if ( uart_rx_buffer.position > 0) 
+							uart_rx_buffer.buffer[--(uart_rx_buffer.position)] = 0;
                         break;
 
 		case 0x09:      ASCII_CTRL.HT = 1;
-						rx_buffer.buffer[rx_buffer.position++] = c;
-						rx_buffer.buffer[rx_buffer.position] = 0;
+						uart_rx_buffer.buffer[uart_rx_buffer.position++] = c;
+						uart_rx_buffer.buffer[uart_rx_buffer.position] = 0;
                         break;
 
 		case 0x0a:      ASCII_CTRL.LF = 1;
-		                rx_buffer.buffer[rx_buffer.position++] = c;
-        		        rx_buffer.buffer[rx_buffer.position] = 0;
+		                uart_rx_buffer.buffer[uart_rx_buffer.position++] = c;
+        		        uart_rx_buffer.buffer[uart_rx_buffer.position] = 0;
                         break;
 
 		case 0x0b:      ASCII_CTRL.VT = 1;
@@ -121,8 +108,8 @@ void usart2_rx_isr(void){
                         break;
 
 		case 0x0d:    	ASCII_CTRL.CR = 1;
-						rx_buffer.buffer[rx_buffer.position++] = c;
-                        rx_buffer.buffer[rx_buffer.position] = 0;
+						uart_rx_buffer.buffer[uart_rx_buffer.position++] = c;
+                        uart_rx_buffer.buffer[uart_rx_buffer.position] = 0;
                         break;
 
 		case 0x0e:      ASCII_CTRL.SO = 1;   
@@ -179,16 +166,16 @@ void usart2_rx_isr(void){
         case 0x1f:      ASCII_CTRL.US = 1;
                         break;
 
-		case 0x7F:      if (rx_buffer.position > 0)
-							rx_buffer.buffer[--(rx_buffer.position)] = 0;
+		case 0x7F:      if (uart_rx_buffer.position > 0)
+							uart_rx_buffer.buffer[--(uart_rx_buffer.position)] = 0;
                         break;
 
-		default:		rx_buffer.buffer[rx_buffer.position++] = c;
-        		        rx_buffer.buffer[rx_buffer.position] = 0;
+		default:		uart_rx_buffer.buffer[uart_rx_buffer.position++] = c;
+        		        uart_rx_buffer.buffer[uart_rx_buffer.position] = 0;
 
 	}
 
-	if (rx_buffer.position == BUFFER_SIZE)
-		rx_buffer.FULL = 1;
+	if (uart_rx_buffer.position == BUFFER_SIZE)
+		uart_rx_buffer.EOT = 1;
 
 }
