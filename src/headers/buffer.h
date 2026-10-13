@@ -6,7 +6,7 @@
 typedef struct {
 	char buffer[BUFFER_SIZE];
 	short position;
-	unsigned short FULL : 1;
+	unsigned short EOT : 1;
 
 } buffer;
 

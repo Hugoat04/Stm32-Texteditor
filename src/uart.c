@@ -176,6 +176,6 @@ void usart2_rx_isr(void){
 	}
 
 	if (uart_rx_buffer.position == BUFFER_SIZE)
-		uart_rx_buffer.FULL = 1;
+		uart_rx_buffer.EOT = 1;
 
 }

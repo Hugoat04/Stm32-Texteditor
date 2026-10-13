@@ -118,6 +118,8 @@ static const isr_t vector_table[120]={
         0,      // SPI2
         0,      // USART1
         usart2_handler,      // USART2
+        0,      // USART3
+        0,      // EXTI15_10
         0,      // RTC_Alarm
         0,      // OTG_FS_WKUP
         0,      // TIM8_BRK_TIM12

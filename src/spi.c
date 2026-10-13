@@ -23,48 +23,43 @@ void spi1_init(void){
     NVIC_ISER1 |= (0x01 << 24);
 
     // DMA for SPI TX
-    DMA2->S[3].CR |= (0x03 << 25) | (0x03 << 16) | (0x01 << 10) | (0x01 << 6) | (0x01 << 4);
+    DMA2->S[3].CR |= (0x03 << 25) | (0x03 << 16) | (0x01 << 10) | (0x01 << 6);
     DMA2->S[3].NDTR |= BUFFER_SIZE;
 	DMA2->S[3].PAR = (unsigned int) &SPI1->DR;
-    NVIC_ISER1 |= (0x01 << 27);
 
     // set SPI1 to SPI mode 0
-    SPI1->CR1 |= (0x01 << 9) | (0x01 << 8) | (0x01 << 6) | (0x07 << 3) | (0x01 << 2);
+    SPI1->CR1 |= (0x01 << 9) | (0x01 << 8) | (0x01 << 6) | (0x00 << 3) | (0x01 << 2);
     SPI1->CR2 |= (0x01 << 1) | 0x01;
     GPIOA->ODR |= (0x01 << 4);
     
 }
 
+// Will send a buffer and ready the DMA for the reception
 void spi1_send(buffer *tx_buffer){
 
     DMA2->LIFCR = (0x03d << 22);
     DMA2->S[3].NDTR = tx_buffer->position;
     DMA2->S[3].M0AR = (unsigned int) tx_buffer->buffer;
 
+    DMA2->S[0].NDTR = tx_buffer->position;
+    spi_rx_buffer.position = tx_buffer->position;
     GPIOA->BSRR |= (0x01 << (4 + 16));
-    DMA2->S[3].CR |= 0x01;
 
+    DMA2->S[0].CR |= 0x01;
+    DMA2->S[3].CR |= 0x01;
+    
 }
 
-// SPI RX DMA ISR
+// SPI RX DMA ISR (also handles the TX line)
 void dma2_stream0_full_isr(void){
 
-    while(!(DMA2->LISR & (0x01 << 5)));
-    DMA2->S[0].CR &= ~(0x01);
-    DMA2->LIFCR = 0x03d;
-    spi_rx_buffer.position = BUFFER_SIZE;
-    DMA2->S[0].NDTR = BUFFER_SIZE;
-    DMA2->S[0].CR |= 0x01;
-    GPIOA->BSRR |= (0x01 << 4);
-}
-
-// SPI TX DMA ISR
-void dma2_stream3_full_isr(void){
-    
     while(SPI1->SR & (0x01 << 7));
-    
-
     DMA2->S[3].CR &= ~(0x01);
-    DMA2->LIFCR = (0x03d << 22);
+    DMA2->S[0].CR &= ~(0x01);
+    DMA2->LIFCR = (0x03d << 22)| 0x03d;
 
+    GPIOA->BSRR |= (0x01 << 4);
+    
+    spi_rx_buffer.EOT = 1;
+    
 }

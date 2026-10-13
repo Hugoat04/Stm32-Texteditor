@@ -17,6 +17,8 @@ int main(){
 			ASCII_CTRL.CR = 0;
 			spi_rx_buffer = empty_buffer;
 			spi1_send(&uart_rx_buffer);
+			while (spi_rx_buffer.EOT == 0);
+			spi_rx_buffer.EOT = 0;
 			uart2_send(&spi_rx_buffer);
 			uart_rx_buffer.position = 0;
 
