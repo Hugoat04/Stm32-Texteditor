@@ -25,6 +25,13 @@ typedef struct {
 #define SPI1    ((spi_regs *) (SPI1_BASE))
 
 void spi1_init(void);
-void spi1_send(buffer *);
+void spi1_dma_init(void);
+void spi1_dma_deinit(void);
+
+void spi1_cs_enable(void);
+void spi1_cs_disable(void);
+
+void __attribute__((weak)) spi1_response_handle(int);
+extern void (*spi1_send)(buffer *, short);
 
 #endif 

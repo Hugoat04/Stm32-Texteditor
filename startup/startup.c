@@ -2,7 +2,7 @@
 
 typedef void (*isr_t)(void);
 extern int main(void);
-extern void __attribute__((weak)) usart2_rx_isr(void), dma1_stream6_full_isr(void), dma2_stream0_full_isr(void), dma2_stream3_full_isr(void);
+extern void __attribute__((weak)) usart2_rx_isr(void), dma1_stream6_full_isr(void), dma2_stream0_full_isr(void), dma2_stream3_full_isr(void), spi1_rx_isr(void);
 extern unsigned int _estack, _etext, _sdata, _edata, _sbss, _ebss;
 
 // initializes C runtime environment and calls main
@@ -57,6 +57,10 @@ void dma2_stream0_handler(void){
 
 void dma2_stream3_handler(void){
         dma2_stream3_full_isr();
+}
+
+void spi1_handler(void){
+        spi1_rx_isr();
 }
 
 // Vector Table
@@ -114,7 +118,7 @@ static const isr_t vector_table[120]={
         0,      // I2C1_ER
         0,      // I2C2_EV
         0,      // I2C2_ER
-        0,      // SPI1
+        spi1_handler,      // SPI1
         0,      // SPI2
         0,      // USART1
         usart2_handler,      // USART2
