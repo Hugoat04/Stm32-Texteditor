@@ -30,10 +30,11 @@ void spi1_init(void){
 
 // CS control (inverted!!)
 void spi1_cs_enable(void){
-    GPIOA->BSRR |= (0x01 << (4 + 16));
-}
-void spi1_cs_disable(void){
     GPIOA->BSRR |= (0x01 << 4);
+}
+
+void spi1_cs_disable(void){
+    GPIOA->BSRR |= (0x01 << (4 + 16));
 }
 
 /*
@@ -43,7 +44,7 @@ void spi1_cs_disable(void){
 */
 
 void spi1_normal_send(buffer *tx_buffer, short resp_length){
-
+    
     spi_rx_buffer.position = 0;
 
     for(int i = 0; i < tx_buffer->position; i++){
@@ -55,21 +56,11 @@ void spi1_normal_send(buffer *tx_buffer, short resp_length){
         spi_rx_buffer.buffer[spi_rx_buffer.position++] = SPI1->DR;
     }
     
-    spi1_response_handle(resp_length);
-}
-
-/*
-spi1_rx_isr(){
-
-    if(SPI1->DR != 0xFF){
-        (spi_rx_buffer.position)--;
-    } 
-    if(spi_rx_buffer.position == 0){
-        spi_rx_buffer.EOT = 1;
+    if(resp_length > 0){
+        spi1_response_handle(resp_length);
     }
-    
 }
-*/
+
 /*
  *
  * SPI through DMA
